@@ -45,6 +45,6 @@ cd "${ROOT_DIR}"
 rm -rf tensorflow
 
 mv "${TEMP_DIR}/tflm-out/tensorflow" tensorflow
-/bin/cp -r "${TEMP_DIR}/tflm-out/third_party/*" third_party/
+/bin/cp -r "${TEMP_DIR}"/tflm-out/third_party/* third_party/
 
 rm -rf "${TEMP_DIR}"
