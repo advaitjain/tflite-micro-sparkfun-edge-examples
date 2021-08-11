@@ -1,8 +1,8 @@
 /**************************************************************************//**
  * @file     cmsis_gcc.h
  * @brief    CMSIS compiler GCC header file
- * @version  V5.3.2
- * @date     25. January 2021
+ * @version  V5.3.3
+ * @date     19. March 2021
  ******************************************************************************/
 /*
  * Copyright (c) 2009-2021 Arm Limited. All rights reserved.
@@ -210,7 +210,7 @@ __STATIC_FORCEINLINE void __TZ_set_STACKSEAL_S (uint32_t* stackTop) {
 
 /**
   \brief   Enable IRQ Interrupts
-  \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  \details Enables IRQ interrupts by clearing special-purpose register PRIMASK.
            Can only be executed in Privileged modes.
  */
 __STATIC_FORCEINLINE void __enable_irq(void)
@@ -221,7 +221,7 @@ __STATIC_FORCEINLINE void __enable_irq(void)
 
 /**
   \brief   Disable IRQ Interrupts
-  \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  \details Disables IRQ interrupts by setting special-purpose register PRIMASK.
            Can only be executed in Privileged modes.
  */
 __STATIC_FORCEINLINE void __disable_irq(void)
@@ -520,7 +520,7 @@ __STATIC_FORCEINLINE void __TZ_set_PRIMASK_NS(uint32_t priMask)
      (defined (__ARM_ARCH_8M_MAIN__ ) && (__ARM_ARCH_8M_MAIN__ == 1))    )
 /**
   \brief   Enable FIQ
-  \details Enables FIQ interrupts by clearing the F-bit in the CPSR.
+  \details Enables FIQ interrupts by clearing special-purpose register FAULTMASK.
            Can only be executed in Privileged modes.
  */
 __STATIC_FORCEINLINE void __enable_fault_irq(void)
@@ -531,7 +531,7 @@ __STATIC_FORCEINLINE void __enable_fault_irq(void)
 
 /**
   \brief   Disable FIQ
-  \details Disables FIQ interrupts by setting the F-bit in the CPSR.
+  \details Disables FIQ interrupts by setting special-purpose register FAULTMASK.
            Can only be executed in Privileged modes.
  */
 __STATIC_FORCEINLINE void __disable_fault_irq(void)
@@ -2002,6 +2002,18 @@ __STATIC_FORCEINLINE uint32_t __SXTAB16(uint32_t op1, uint32_t op2)
   __ASM ("sxtab16 %0, %1, %2" : "=r" (result) : "r" (op1), "r" (op2) );
   return(result);
 }
+
+__STATIC_FORCEINLINE uint32_t __SXTAB16_RORn(uint32_t op1, uint32_t op2, uint32_t rotate)
+{
+  uint32_t result;
+  if (__builtin_constant_p(rotate) && ((rotate == 8U) || (rotate == 16U) || (rotate == 24U))) {
+    __ASM volatile ("sxtab16 %0, %1, %2, ROR %3" : "=r" (result) : "r" (op1) , "r" (op2) , "i" (rotate));
+  } else {
+    result = __SXTAB16(op1, __ROR(op2, rotate));
+  }
+  return result;
+}
+
 
 __STATIC_FORCEINLINE uint32_t __SMUAD  (uint32_t op1, uint32_t op2)
 {

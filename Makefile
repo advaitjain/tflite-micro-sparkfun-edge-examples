@@ -14,7 +14,7 @@
 # ==============================================================================
 
 $(shell mkdir -p downloads)
-DOWNLOAD_RESULT := $(shell ./arm_gcc_download.sh downloads)
+DOWNLOAD_RESULT := $(shell ./scripts/arm_gcc_download.sh)
 ifneq ($(DOWNLOAD_RESULT), SUCCESS)
   $(error Something went wrong with the GCC download: $(DOWNLOAD_RESULT))
 endif
