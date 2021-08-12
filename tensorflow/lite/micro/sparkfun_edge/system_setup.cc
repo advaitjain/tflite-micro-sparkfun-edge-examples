@@ -16,7 +16,6 @@ limitations under the License.
 #include "tensorflow/lite/micro/system_setup.h"
 
 #include "tensorflow/lite/micro/debug_log.h"
-#include "tensorflow/lite/micro/cortex_m_generic/debug_log_callback.h"
 #include "tensorflow/lite/micro/micro_time.h"
 
 // These are headers from Ambiq's Apollo3 SDK.
@@ -60,12 +59,16 @@ void BurstModeEnable() {
   }
 }
 
-void TflmDebugLog(const char* s) {
-  am_util_stdio_printf("%s", s);
-}
-
-
 }  // namespace
+
+// Implementation for the DebugLog() function that prints to the UART on the
+// SparkFun Edge microcontroller. The same should work for other targets using
+// the Ambiq Apollo 3.
+extern "C" void DebugLog(const char* s) {
+#ifndef TF_LITE_STRIP_ERROR_STRINGS
+  am_util_stdio_printf("%s", s);
+#endif
+}
 
 namespace tflite {
 
@@ -74,8 +77,6 @@ namespace tflite {
 // measurements may no longer be valid.
 void InitializeTarget() {
   am_bsp_uart_printf_enable();
-
-  RegisterDebugLogCallback(TflmDebugLog);
 
   BurstModeEnable();
   am_hal_ctimer_config_t timer_config;

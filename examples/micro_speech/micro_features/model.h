@@ -13,31 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-// Implementation for the DebugLog() function that prints to the debug logger on
-// an generic Cortex-M device.
+// This is a standard TensorFlow Lite FlatBuffer model file that has been
+// converted into a C data array, so it can be easily compiled into a binary
+// for devices that don't have a file system. It was created using the command:
+// xxd -i model.tflite > model.cc
 
-#ifdef __cplusplus
-extern "C" {
-#endif  // __cplusplus
+#ifndef TENSORFLOW_LITE_MICRO_EXAMPLES_MICRO_SPEECH_MICRO_FEATURES_MODEL_H_
+#define TENSORFLOW_LITE_MICRO_EXAMPLES_MICRO_SPEECH_MICRO_FEATURES_MODEL_H_
 
-#include "tensorflow/lite/micro/debug_log.h"
+extern const unsigned char g_model[];
+extern const int g_model_len;
 
-#include "tensorflow/lite/micro/cortex_m_generic/debug_log_callback.h"
-
-static DebugLogCallback debug_log_callback = nullptr;
-
-void RegisterDebugLogCallback(void (*cb)(const char* s)) {
-  debug_log_callback = cb;
-}
-
-void DebugLog(const char* s) {
-#ifndef TF_LITE_STRIP_ERROR_STRINGS
-  if (debug_log_callback != nullptr) {
-    debug_log_callback(s);
-  }
-#endif
-}
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif  // __cplusplus
+#endif  // TENSORFLOW_LITE_MICRO_EXAMPLES_MICRO_SPEECH_MICRO_FEATURES_MODEL_H_
