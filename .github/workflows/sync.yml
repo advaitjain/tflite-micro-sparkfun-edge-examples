@@ -29,8 +29,8 @@ jobs:
       - name: Sync the code
         run: |
           ./scripts/sync_from_tflite_micro.sh
-          git config --local user.name "advaitjain-bot"
-          git config --local user.email "advaitjain-bot@google.com"
+          git config --local user.name "advaitjain"
+          git config --local user.email "advaitjain@users.noreply.github.com"
           git add *
 
           if [[ $(git status --porcelain | wc -l) == 0 ]]; then
@@ -48,8 +48,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: (Sparkfun Edge) Automated sync from github.com/tensorflow/tflite-micro
           commit-message: Automated sync from github.com/tensorflow/tflite-micro
-          committer: advaitjain-bot <advaitjain-github-bot@google.com>
-          author: advaitjain-bot <advaitjain-github-bot@google.com>
           body: "(Sparkfun Edge) Automated sync from github.com/tensorflow/tflite-micro"
           labels: bot:sync-tf, ci:run
           reviewers: advaitjain
