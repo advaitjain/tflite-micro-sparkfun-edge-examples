@@ -21,7 +21,6 @@ limitations under the License.
 #include "tensorflow/lite/kernels/internal/common.h"
 #include "tensorflow/lite/kernels/internal/quantization_util.h"
 #include "tensorflow/lite/kernels/internal/reference/depthwiseconv_float.h"
-#include "tensorflow/lite/kernels/internal/reference/depthwiseconv_uint8.h"
 #include "tensorflow/lite/kernels/internal/reference/integer_ops/depthwise_conv.h"
 #include "tensorflow/lite/kernels/internal/tensor_ctypes.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
@@ -54,9 +53,12 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
 
   const TfLiteTensor* input =
       GetInput(context, node, kDepthwiseConvInputTensor);
+  TF_LITE_ENSURE(context, input != nullptr);
   const TfLiteTensor* filter =
       GetInput(context, node, kDepthwiseConvWeightsTensor);
+  TF_LITE_ENSURE(context, filter != nullptr);
   TfLiteTensor* output = GetOutput(context, node, kDepthwiseConvOutputTensor);
+  TF_LITE_ENSURE(context, output != nullptr);
 
   const TfLiteType data_type = input->type;
   int input_width = SizeOfDimension(input, 2);
@@ -83,17 +85,18 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
                          filter->dims->data[kDepthwiseConvQuantizedDimension]);
     TF_LITE_ENSURE_EQ(context, affine_quantization->scale->size,
                       affine_quantization->zero_point->size);
+
+    // Allocate memory for per-channel quantization parameters
+    const int num_channels =
+        filter->dims->data[kDepthwiseConvQuantizedDimension];
+
+    data->reference_op_data.per_channel_output_multiplier =
+        reinterpret_cast<int32_t*>(context->AllocatePersistentBuffer(
+            context, num_channels * sizeof(int32_t)));
+    data->reference_op_data.per_channel_output_shift =
+        reinterpret_cast<int32_t*>(context->AllocatePersistentBuffer(
+            context, num_channels * sizeof(int32_t)));
   }
-
-  // Allocate memory for per-channel quantization parameters
-  const int num_channels = filter->dims->data[kDepthwiseConvQuantizedDimension];
-
-  data->reference_op_data.per_channel_output_multiplier =
-      reinterpret_cast<int32_t*>(context->AllocatePersistentBuffer(
-          context, num_channels * sizeof(int32_t)));
-  data->reference_op_data.per_channel_output_shift =
-      reinterpret_cast<int32_t*>(context->AllocatePersistentBuffer(
-          context, num_channels * sizeof(int32_t)));
 
   TF_LITE_ENSURE_STATUS(CalculateOpDataDepthwiseConv(
       context, node, params, input_width, input_height, filter_width,
@@ -247,52 +250,6 @@ void EvalQuantizedPerChannel(TfLiteContext* context, TfLiteNode* node,
   }
 }
 
-void EvalQuantized(TfLiteContext* context, TfLiteNode* node,
-                   const TfLiteDepthwiseConvParams& params, const OpData& data,
-                   const TfLiteEvalTensor* input,
-                   const TfLiteEvalTensor* filter, const TfLiteEvalTensor* bias,
-                   TfLiteEvalTensor* output) {
-  tflite::DepthwiseParams op_params =
-      DepthwiseConvParamsQuantized(params, data.reference_op_data);
-
-  if (1 == op_params.dilation_width_factor &&
-      1 == op_params.dilation_height_factor) {
-    RuntimeShape filter_shape = tflite::micro::GetTensorShape(filter);
-    const int filter_height = filter_shape.Dims(1);
-    const int filter_width = filter_shape.Dims(2);
-    RuntimeShape input_shape = tflite::micro::GetTensorShape(input);
-    const int input_height = input_shape.Dims(1);
-    const int input_width = input_shape.Dims(2);
-    const int input_depth = input_shape.Dims(3);
-    RuntimeShape output_shape = tflite::micro::GetTensorShape(output);
-    const int output_height = output_shape.Dims(1);
-    const int output_width = output_shape.Dims(2);
-    arm_depthwise_conv_u8_basic_ver1(
-        tflite::micro::GetTensorData<uint8_t>(input), input_width, input_height,
-        input_depth, tflite::micro::GetTensorData<uint8_t>(filter),
-        filter_width, filter_height, op_params.depth_multiplier,
-        op_params.padding_values.width, op_params.padding_values.height,
-        op_params.stride_width, op_params.stride_height,
-        op_params.dilation_width_factor, op_params.dilation_height_factor,
-        tflite::micro::GetTensorData<int32_t>(bias), op_params.input_offset,
-        op_params.weights_offset, op_params.output_offset,
-        tflite::micro::GetTensorData<uint8_t>(output), output_width,
-        output_height, op_params.quantized_activation_min,
-        op_params.quantized_activation_max, op_params.output_shift,
-        op_params.output_multiplier);
-  } else {
-    tflite::reference_ops::DepthwiseConv(
-        op_params, tflite::micro::GetTensorShape(input),
-        tflite::micro::GetTensorData<uint8_t>(input),
-        tflite::micro::GetTensorShape(filter),
-        tflite::micro::GetTensorData<uint8_t>(filter),
-        tflite::micro::GetTensorShape(bias),
-        tflite::micro::GetTensorData<int32_t>(bias),
-        tflite::micro::GetTensorShape(output),
-        tflite::micro::GetTensorData<uint8_t>(output));
-  }
-}
-
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   TFLITE_DCHECK(node->user_data != nullptr);
   TFLITE_DCHECK(node->builtin_data != nullptr);
@@ -312,8 +269,6 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
           ? tflite::micro::GetEvalInput(context, node, kDepthwiseConvBiasTensor)
           : nullptr;
 
-  // TODO(aselle): Consider whether float conv and quantized conv should be
-  // separate ops to avoid dispatch overhead here.
   switch (input->type) {  // Already know in/out types are same.
     case kTfLiteFloat32: {
       tflite::reference_ops::DepthwiseConv(
@@ -331,9 +286,6 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
     case kTfLiteInt8:
       EvalQuantizedPerChannel(context, node, params, data, input, filter, bias,
                               output);
-      break;
-    case kTfLiteUInt8:
-      EvalQuantized(context, node, params, data, input, filter, bias, output);
       break;
     default:
       TF_LITE_KERNEL_LOG(context, "Type %s (%d) not supported.",
