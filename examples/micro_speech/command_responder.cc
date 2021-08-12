@@ -15,14 +15,41 @@ limitations under the License.
 
 #include "command_responder.h"
 
-// The default implementation writes out the name of the recognized command
-// to the error console. Real applications will want to take some custom
-// action instead, and should implement their own versions of this function.
+#include "am_bsp.h"  // NOLINT
+
+// This implementation will light up the LEDs on the board in response to
+// different commands.
 void RespondToCommand(tflite::ErrorReporter* error_reporter,
                       int32_t current_time, const char* found_command,
                       uint8_t score, bool is_new_command) {
+  static bool is_initialized = false;
+  if (!is_initialized) {
+    // Setup LED's as outputs
+#ifdef AM_BSP_NUM_LEDS
+    am_devices_led_array_init(am_bsp_psLEDs, AM_BSP_NUM_LEDS);
+    am_devices_led_array_out(am_bsp_psLEDs, AM_BSP_NUM_LEDS, 0x00000000);
+#endif
+    is_initialized = true;
+  }
+
+  // Toggle the blue LED every time an inference is performed.
+  am_devices_led_toggle(am_bsp_psLEDs, AM_BSP_LED_BLUE);
+
+  // Turn on LEDs corresponding to the detection for the cycle
+  am_devices_led_off(am_bsp_psLEDs, AM_BSP_LED_RED);
+  am_devices_led_off(am_bsp_psLEDs, AM_BSP_LED_YELLOW);
+  am_devices_led_off(am_bsp_psLEDs, AM_BSP_LED_GREEN);
   if (is_new_command) {
     TF_LITE_REPORT_ERROR(error_reporter, "Heard %s (%d) @%dms", found_command,
                          score, current_time);
+    if (found_command[0] == 'y') {
+      am_devices_led_on(am_bsp_psLEDs, AM_BSP_LED_YELLOW);
+    }
+    if (found_command[0] == 'n') {
+      am_devices_led_on(am_bsp_psLEDs, AM_BSP_LED_RED);
+    }
+    if (found_command[0] == 'u') {
+      am_devices_led_on(am_bsp_psLEDs, AM_BSP_LED_GREEN);
+    }
   }
 }

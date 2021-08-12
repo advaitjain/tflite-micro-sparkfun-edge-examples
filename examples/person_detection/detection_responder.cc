@@ -15,11 +15,36 @@ limitations under the License.
 
 #include "detection_responder.h"
 
-// This dummy implementation writes person and no person scores to the error
-// console. Real applications will want to take some custom action instead, and
-// should implement their own versions of this function.
+#include "am_bsp.h"  // NOLINT
+
+// This implementation will light up LEDs on the board in response to the
+// inference results.
 void RespondToDetection(tflite::ErrorReporter* error_reporter,
                         int8_t person_score, int8_t no_person_score) {
-  TF_LITE_REPORT_ERROR(error_reporter, "person score:%d no person score %d",
+  static bool is_initialized = false;
+  if (!is_initialized) {
+    // Setup LED's as outputs.  Leave red LED alone since that's an error
+    // indicator for sparkfun_edge in image_provider.
+    am_devices_led_init((am_bsp_psLEDs + AM_BSP_LED_BLUE));
+    am_devices_led_init((am_bsp_psLEDs + AM_BSP_LED_GREEN));
+    am_devices_led_init((am_bsp_psLEDs + AM_BSP_LED_YELLOW));
+    is_initialized = true;
+  }
+
+  // Toggle the blue LED every time an inference is performed.
+  am_devices_led_toggle(am_bsp_psLEDs, AM_BSP_LED_BLUE);
+
+  // Turn on the green LED if a person was detected.  Turn on the yellow LED
+  // otherwise.
+  am_devices_led_off(am_bsp_psLEDs, AM_BSP_LED_YELLOW);
+  am_devices_led_off(am_bsp_psLEDs, AM_BSP_LED_GREEN);
+  if (person_score > no_person_score) {
+    am_devices_led_on(am_bsp_psLEDs, AM_BSP_LED_GREEN);
+  } else {
+    am_devices_led_on(am_bsp_psLEDs, AM_BSP_LED_YELLOW);
+  }
+
+  TF_LITE_REPORT_ERROR(error_reporter, "Person score: %d No person score: %d",
                        person_score, no_person_score);
 }
+
