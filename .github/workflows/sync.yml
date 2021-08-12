@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@v2
       - uses: actions/checkout@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_TOKEN }}
 
       - name: Sync the code
         run: |
@@ -48,7 +48,7 @@ jobs:
         with:
           branch: sync-from-tflite-micro
           delete-branch: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_TOKEN }}
           title: (Sparkfun Edge) Automated sync from github.com/tensorflow/tflite-micro
           commit-message: Automated sync from github.com/tensorflow/tflite-micro
           body: "(Sparkfun Edge) Automated sync from github.com/tensorflow/tflite-micro"
