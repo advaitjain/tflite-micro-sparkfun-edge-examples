@@ -43,8 +43,11 @@ python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
 
 cd "${ROOT_DIR}"
 rm -rf tensorflow
-
 mv "${TEMP_DIR}/tflm-out/tensorflow" tensorflow
+rm -rf tensorflow/lite/micro/cortex_m_generic
+rm -rf tensorflow/lite/micro/system_setup.cc
+git checkout tensorflow/lite/micro/sparkfun_edge
+
 /bin/cp -r "${TEMP_DIR}"/tflm-out/third_party/* third_party/
 
 rm -rf "${TEMP_DIR}"

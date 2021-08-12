@@ -154,8 +154,7 @@ CMSIS_NN_SRCS := $(shell find third_party/cmsis/CMSIS/NN/Source -name "*.cc" -o 
 ALL_SRCS := \
 	$(CMSIS_NN_SRCS) \
 	$(TFLM_CC_SRCS) \
-  $(THIRD_PARTY_CC_SRCS) \
-	system_setup.cc
+  $(THIRD_PARTY_CC_SRCS)
 
 OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.c,%.o,$(patsubst %.cc,%.o,$(ALL_SRCS))))
 
@@ -180,4 +179,28 @@ hello_world: libtflm
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) $(wildcard examples/hello_world/*.cc) $(INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
 
-examples: hello_world
+
+magic_wand: libtflm
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) $(wildcard examples/magic_wand/*.cc) $(INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
+
+MICRO_SPEECH_SRCS := $(wildcard examples/micro_speech/*.cc)
+MICRO_SPEECH_SRCS += $(wildcard examples/micro_speech/*/*.cc)
+MICRO_SPEECH_THIRD_PARTY_SRCS := $(wildcard third_party/kissfft/*.c)
+MICRO_SPEECH_THIRD_PARTY_SRCS += $(wildcard third_party/kissfft/*/*.c)
+MICRO_SPEECH_INCLUDES := $(INCLUDES) -I./examples/micro_speech
+
+micro_speech: libtflm
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) $(MICRO_SPEECH_SRCS) $(MICRO_SPEECH_THIRD_PARTY_SRCS) $(MICRO_SPEECH_INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
+
+PERSON_DETECTION_SRCS := $(wildcard examples/person_detection/*.cc)
+PERSON_DETECTION_THIRD_PARTY_SRCS := $(wildcard third_party/person_model_int8/*.cc)
+PERSON_DETECTION_INCLUDES := $(INCLUDES) -I./examples/person_detection
+
+person_detection: libtflm
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) $(PERSON_DETECTION_SRCS) $(PERSON_DETECTION_THIRD_PARTY_SRCS) $(PERSON_DETECTION_INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
+
+examples: hello_world magic_wand micro_speech person_detection
+
