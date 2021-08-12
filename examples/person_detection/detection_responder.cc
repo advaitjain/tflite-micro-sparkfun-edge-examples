@@ -1,4 +1,4 @@
-/* Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow/lite/micro/system_setup.h"
+#include "detection_responder.h"
 
-namespace tflite {
-
-// To add an equivalent function for your own platform, create your own
-// implementation file, and place it in a subfolder named after the target. See
-// tensorflow/lite/micro/debug_log.cc for a similar example.
-void InitializeTarget() {}
-
-}  // namespace tflite
+// This dummy implementation writes person and no person scores to the error
+// console. Real applications will want to take some custom action instead, and
+// should implement their own versions of this function.
+void RespondToDetection(tflite::ErrorReporter* error_reporter,
+                        int8_t person_score, int8_t no_person_score) {
+  TF_LITE_REPORT_ERROR(error_reporter, "person score:%d no person score %d",
+                       person_score, no_person_score);
+}
