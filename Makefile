@@ -95,6 +95,8 @@ COMMON_FLAGS = \
   -Wall \
   -Wextra \
   -Wno-missing-field-initializers \
+  -Wno-return-type \
+  -Wno-sign-compare \
   -Wno-strict-aliasing \
   -Wno-type-limits \
   -Wno-unused-function \
@@ -145,16 +147,24 @@ INCLUDES := \
   -I$(APOLLO3_SDK)/CMSIS/AmbiqMicro/Include/ \
   -I$(APOLLO3_SDK)/boards_sfe/edge/bsp \
   -I$(APOLLO3_SDK)/boards_sfe/common/third_party/hm01b0 \
+  -I$(APOLLO3_SDK)/boards_sfe/common/third_party/lis2dh12 \
   -I$(APOLLO3_SDK)/devices/ \
   -I$(APOLLO3_SDK)/utils/
 
 TFLM_CC_SRCS := $(shell find tensorflow -name "*.cc" -o -name "*.c")
 CMSIS_NN_SRCS := $(shell find third_party/cmsis/CMSIS/NN/Source -name "*.cc" -o -name "*.c")
 
+# Note that we are adding some of the example specific sources (such as
+# himax_driver) into ALL_SRCS. This is a shortcut to reuse the rules to
+# build .c files without having to explicitly list them out for the examples.
 ALL_SRCS := \
 	$(CMSIS_NN_SRCS) \
 	$(TFLM_CC_SRCS) \
-  $(THIRD_PARTY_CC_SRCS)
+  $(THIRD_PARTY_CC_SRCS) \
+  $(wildcard $(APOLLO3_SDK)/boards_sfe/common/third_party/lis2dh12/*.c) \
+  $(wildcard examples/person_detection/himax_driver/*.c) \
+  $(wildcard third_party/kissfft/*.c) \
+  $(wildcard third_party/kissfft/*/*.c)
 
 OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.c,%.o,$(patsubst %.cc,%.o,$(ALL_SRCS))))
 
@@ -180,14 +190,13 @@ hello_world: libtflm
 	$(CXX) $(CXXFLAGS) $(wildcard examples/hello_world/*.cc) $(INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
 
 
+MAGIC_WAND_SRCS := $(wildcard examples/magic_wand/*.cc)
 magic_wand: libtflm
 	@mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) $(wildcard examples/magic_wand/*.cc) $(INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
+	$(CXX) $(CXXFLAGS) $(MAGIC_WAND_SRCS) $(MAGIC_WAND_THIRD_PARTY_SRCS) $(INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
 
 MICRO_SPEECH_SRCS := $(wildcard examples/micro_speech/*.cc)
-MICRO_SPEECH_SRCS += $(wildcard examples/micro_speech/*/*.cc)
-MICRO_SPEECH_THIRD_PARTY_SRCS := $(wildcard third_party/kissfft/*.c)
-MICRO_SPEECH_THIRD_PARTY_SRCS += $(wildcard third_party/kissfft/*/*.c)
+MICRO_SPEECH_SRCS += $(wildcard examples/micro_speech/micro_features/*.cc)
 MICRO_SPEECH_INCLUDES := $(INCLUDES) -I./examples/micro_speech
 
 micro_speech: libtflm
@@ -195,12 +204,11 @@ micro_speech: libtflm
 	$(CXX) $(CXXFLAGS) $(MICRO_SPEECH_SRCS) $(MICRO_SPEECH_THIRD_PARTY_SRCS) $(MICRO_SPEECH_INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
 
 PERSON_DETECTION_SRCS := $(wildcard examples/person_detection/*.cc)
-PERSON_DETECTION_THIRD_PARTY_SRCS := $(wildcard third_party/person_model_int8/*.cc)
 PERSON_DETECTION_INCLUDES := $(INCLUDES) -I./examples/person_detection
 
 person_detection: libtflm
 	@mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) $(PERSON_DETECTION_SRCS) $(PERSON_DETECTION_THIRD_PARTY_SRCS) $(PERSON_DETECTION_INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
+	$(CXX) $(CXXFLAGS) $(PERSON_DETECTION_SRCS) $(PERSON_DETECTION_INCLUDES) $(LIBTFLM) $(LDFLAGS) $(EXTRA_LIBS) -o $(BINDIR)/$@
 
 examples: hello_world magic_wand micro_speech person_detection
 

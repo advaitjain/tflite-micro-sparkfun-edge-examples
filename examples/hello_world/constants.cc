@@ -15,5 +15,5 @@ limitations under the License.
 
 #include "constants.h"
 
-// This is a small number so that it's easy to read the logs
-const int kInferencesPerCycle = 20;
+// This is tuned so that a full cycle takes ~4 seconds on a SparkFun Edge.
+const int kInferencesPerCycle = 1000;
