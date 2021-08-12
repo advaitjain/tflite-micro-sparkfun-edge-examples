@@ -25,6 +25,7 @@ on:
 jobs:
   linux_build:
     runs-on: ubuntu-latest
+    name: Linux Build
 
     if: |
       github.event_name == 'workflow_dispatch' ||
