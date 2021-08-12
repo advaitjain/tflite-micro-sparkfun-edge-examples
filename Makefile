@@ -129,11 +129,14 @@ LDFLAGS += \
 
 INCLUDES := \
   -I. \
-  -I./third_party/gemmlowp \
-  -I./third_party/flatbuffers/include \
-  -I./third_party/ruy \
+  -Ithird_party/cmsis/ \
   -I./third_party/cmsis/CMSIS/Core/Include/ \
   -I./third_party/cmsis/CMSIS/DSP/Include/ \
+  -Ithird_party/cmsis/CMSIS/NN/Include/ \
+  -I./third_party/flatbuffers/include \
+  -I./third_party/gemmlowp \
+  -I./third_party/kissfft \
+  -I./third_party/ruy \
   -I$(TOOLCHAIN_ROOT)/arm-none-eabi/ \
   -I$(APOLLO3_SDK)/mcu/apollo3/ \
   -I$(APOLLO3_SDK)/mcu/apollo3/regs \
@@ -143,9 +146,7 @@ INCLUDES := \
   -I$(APOLLO3_SDK)/boards_sfe/edge/bsp \
   -I$(APOLLO3_SDK)/boards_sfe/common/third_party/hm01b0 \
   -I$(APOLLO3_SDK)/devices/ \
-  -I$(APOLLO3_SDK)/utils/ \
-  -Ithird_party/cmsis/CMSIS/NN/Include/ \
-  -Ithird_party/cmsis/
+  -I$(APOLLO3_SDK)/utils/
 
 TFLM_CC_SRCS := $(shell find tensorflow -name "*.cc" -o -name "*.c")
 CMSIS_NN_SRCS := $(shell find third_party/cmsis/CMSIS/NN/Source -name "*.cc" -o -name "*.c")
