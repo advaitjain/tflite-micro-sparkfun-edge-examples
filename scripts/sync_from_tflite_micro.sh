@@ -46,6 +46,10 @@ rm -rf tensorflow
 mv "${TEMP_DIR}/tflm-out/tensorflow" tensorflow
 rm -rf tensorflow/lite/micro/cortex_m_generic
 rm -rf tensorflow/lite/micro/system_setup.cc
+
+# For this repo we are forking both the models and the examples.
+rm -rf tensorflow/lite/micro/models
+
 git checkout tensorflow/lite/micro/sparkfun_edge
 
 /bin/cp -r "${TEMP_DIR}"/tflm-out/third_party/* third_party/
