@@ -50,7 +50,9 @@ else
   GCC_URL="https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2"
 
   TEMPFILE=$(mktemp -d)/temp_file
-  wget ${GCC_URL} -O ${TEMPFILE} >&2
+  # TODO(b/200052821): remove no-check-certificate once it is no longer
+  # required.
+  wget ${GCC_URL} --no-check-certificate -O ${TEMPFILE} >&2
 
   mkdir ${DOWNLOADED_GCC_PATH}
   tar -C ${DOWNLOADED_GCC_PATH} --strip-components=1 -xjf ${TEMPFILE} >&2
