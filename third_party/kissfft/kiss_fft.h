@@ -29,7 +29,7 @@ extern "C++" {
 #define KISS_FFT_MALLOC(nbytes) _mm_malloc(nbytes,16)
 #define KISS_FFT_FREE _mm_free
 #else	
-#define KISS_FFT_MALLOC(X) (void*)(~0x1) /* Patched. */
+#define KISS_FFT_MALLOC(X) (void*)(0x0) /* Patched. */
 #define KISS_FFT_FREE(X) /* Patched. */
 #endif	
 
