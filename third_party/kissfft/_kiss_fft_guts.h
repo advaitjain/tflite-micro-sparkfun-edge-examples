@@ -166,4 +166,3 @@ struct kiss_fft_state{
 #define  KISS_FFT_TMP_FREE(ptr) KISS_FFT_FREE(ptr)
 #endif
 #endif // _KISS_FFT_GUTS_H
-
