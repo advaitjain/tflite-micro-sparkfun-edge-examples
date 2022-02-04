@@ -197,7 +197,7 @@ TfLiteStatus GetImage(tflite::ErrorReporter* error_reporter, int frame_width,
                                        frame_height, channels);
 
 #ifdef DEMO_HM01B0_FRAMEBUFFER_DUMP_ENABLE
-  hm01b0_framebuffer_dump(frame, frame_width * frame_height * channels);
+  hm01b0_framebuffer_dump(reinterpret_cast<uint8_t*>(frame), frame_width * frame_height * channels);
 #endif
 
   return kTfLiteOk;
