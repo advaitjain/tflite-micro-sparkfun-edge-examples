@@ -47,7 +47,14 @@ if [ -d ${DOWNLOADED_GCC_PATH} ]; then
   echo >&2 "${DOWNLOADED_GCC_PATH} already exists, skipping the download."
 else
 
-  GCC_URL="https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2"
+	UNAME_S=$(uname -s)
+	if [ ${UNAME_S} == "Linux" ]; then
+		GCC_URL="https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2"
+	elif [ ${UNAME_S} == "Darwin" ]; then
+		GCC_URL="https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-mac.tar.bz2"
+	else
+		echo >&2 "invalid host architecture ${UNAME_S}"
+	fi
 
   TEMPFILE=$(mktemp -d)/temp_file
   # TODO(b/200052821): remove no-check-certificate once it is no longer
