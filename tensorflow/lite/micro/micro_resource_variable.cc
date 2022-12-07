@@ -20,7 +20,7 @@ limitations under the License.
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/kernels/internal/compatibility.h"
 #include "tensorflow/lite/micro/memory_helpers.h"
-#include "tensorflow/lite/micro/micro_error_reporter.h"
+#include "tensorflow/lite/micro/micro_log.h"
 #include "tensorflow/lite/micro/micro_utils.h"
 
 namespace tflite {
@@ -121,6 +121,14 @@ TfLiteStatus MicroResourceVariables::Assign(int id,
   }
   TFLITE_DCHECK(EvalTensorBytes(tensor) == variable.bytes);
   memcpy(variable.resource_buffer, tensor->data.raw, variable.bytes);
+  return kTfLiteOk;
+}
+
+TfLiteStatus MicroResourceVariables::ResetAll() {
+  for (int i = 0; i < num_resource_variables_; i++) {
+    MicroResourceVariable variable = resource_variables_[i];
+    memset(variable.resource_buffer, 0, variable.bytes);
+  }
   return kTfLiteOk;
 }
 
